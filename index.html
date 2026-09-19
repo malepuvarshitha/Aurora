@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Churn Prediction Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #050505;
+            min-height: 100vh;
+            padding: 104px 20px 40px;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* ---------- Nav ---------- */
+        nav.top-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 clamp(20px, 5vw, 56px);
+            z-index: 100;
+            background: transparent;
+            border-bottom: 1px solid transparent;
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+            transition: background 0.45s ease, border-color 0.45s ease, backdrop-filter 0.45s ease;
+        }
+
+        nav.top-nav.scrolled {
+            background: rgba(5, 5, 5, 0.55);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(14px) saturate(140%);
+            -webkit-backdrop-filter: blur(14px) saturate(140%);
+        }
+
+        nav.top-nav .brand {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            background: linear-gradient(135deg, #60a3ff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav.top-nav .navlinks {
+            display: flex;
+            gap: 26px;
+            font-size: 0.85rem;
+            color: #b0acff;
+        }
+
+        nav.top-nav .navlinks a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        nav.top-nav .navlinks a:hover {
+            color: #ffffff;
+        }
+
+        @media (max-width: 560px) {
+            nav.top-nav .navlinks { display: none; }
+        }
+
+        .fade-heading {
+            will-change: opacity, transform;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #60a3ff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #b0acff;
+            font-weight: 300;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            animation: fadeInUp 0.8s ease-out;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 48px 0 rgba(31, 38, 135, 0.45);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #e0d7ff;
+            text-transform: capitalize;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(106, 163, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(106, 163, 255, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 35px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #60a3ff 0%, #a78bfa 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 24px rgba(106, 163, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(106, 163, 255, 0.45);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        .results-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .risk-gauge {
+            margin-bottom: 40px;
+        }
+
+        .gauge-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+        }
+
+        .gauge-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                #22c55e 0deg,
+                #eab308 90deg,
+                #ef4444 180deg
+            );
+            padding: 8px;
+            position: relative;
+            box-shadow: 0 0 40px rgba(96, 165, 250, 0.3);
+        }
+
+        .gauge-circle-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(15, 12, 41, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .gauge-score {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a3ff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gauge-label {
+            font-size: 0.8rem;
+            color: #b0acff;
+            margin-top: 5px;
+        }
+
+        .classification {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .classification-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .classification-label {
+            font-size: 0.85rem;
+            color: #b0acff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .classification-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .risk-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .risk-medium {
+            background: rgba(234, 179, 8, 0.2);
+            color: #fde047;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .risk-low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .metric-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #b0acff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #60a3ff;
+        }
+
+        .recommendations {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #60a3ff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .recommendations h3 {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            color: #a78bfa;
+            font-weight: 600;
+        }
+
+        .recommendations ul {
+            list-style: none;
+        }
+
+        .recommendations li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.95rem;
+            color: #e0d7ff;
+            line-height: 1.5;
+        }
+
+        .recommendations li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #60a3ff;
+            font-weight: bold;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .glass-card {
+                padding: 25px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav" id="topNav">
+        <span class="brand">Churn Intelligence</span>
+        <div class="navlinks">
+            <a href="#churnForm">Customer Profile</a>
+            <a href="#resultsSection">Results</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1 class="fade-heading" id="pageTitle">Churn Prediction Intelligence</h1>
+            <p>Advanced Analytics for Customer Retention</p>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Input Form -->
+            <div class="glass-card">
+                <h2 style="margin-bottom: 30px; font-size: 1.5rem; font-weight: 600;">Customer Profile</h2>
+                
+                <form id="churnForm">
+                    <div class="form-group">
+                        <label for="age">Customer Age (years)</label>
+                        <input type="number" id="age" placeholder="e.g., 35" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tenure">Tenure (months)</label>
+                        <input type="number" id="tenure" placeholder="e.g., 24" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="monthlyCharges">Monthly Charges ($)</label>
+                        <input type="number" id="monthlyCharges" step="0.01" placeholder="e.g., 85.50" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supportCalls">Support Calls (count)</label>
+                        <input type="number" id="supportCalls" placeholder="e.g., 3" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="complaints">Complaints (count)</label>
+                        <input type="number" id="complaints" placeholder="e.g., 1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="usage">Monthly Usage (hours)</label>
+                        <input type="number" id="usage" placeholder="e.g., 45" required>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Analyze Churn Risk</button>
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Results Section -->
+            <div class="glass-card results-section" id="resultsSection">
+                <div class="results-header">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 20px;">Churn Analysis Results</h2>
+                </div>
+
+                <div class="risk-gauge">
+                    <div class="gauge-container">
+                        <div class="gauge-circle">
+                            <div class="gauge-circle-inner">
+                                <div class="gauge-score" id="riskScore">0</div>
+                                <div class="gauge-label">Risk Score</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="classification">
+                    <div class="classification-item">
+                        <div class="classification-label">Classification</div>
+                        <div class="classification-value" id="classification">-</div>
+                    </div>
+                    <div class="classification-item">
+                        <div class="classification-label">Risk Level</div>
+                        <div class="classification-value" id="riskLevel">-</div>
+                    </div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <div class="metric-label">Tenure</div>
+                        <div class="metric-value" id="displayTenure">-</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Monthly Charges</div>
+                        <div class="metric-value" id="displayCharges">-</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Support Calls</div>
+                        <div class="metric-value" id="displaySupport">-</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Complaints</div>
+                        <div class="metric-value" id="displayComplaints">-</div>
+                    </div>
+                </div>
+
+                <div class="recommendations" id="recommendationsBox">
+                    <h3>Retention Recommendations</h3>
+                    <ul id="recommendationsList"></ul>
+                </div>
+
+                <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="resetForm()">Analyze Another Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Nav turns into a frosted glass panel once the page scrolls.
+        const topNav = document.getElementById('topNav');
+        const NAV_TRIGGER = 40;
+        const NAV_H = 64;
+        const FADE_ZONE = 90; // px of scroll distance the heading fades over
+        const pageTitle = document.getElementById('pageTitle');
+
+        function updateHeadingFade() {
+            if (!pageTitle) return;
+            const rect = pageTitle.getBoundingClientRect();
+            const distanceUnderNav = NAV_H - rect.top;
+            let opacity = 1;
+            let translate = 0;
+            if (distanceUnderNav > 0) {
+                const t = Math.min(distanceUnderNav / FADE_ZONE, 1);
+                opacity = 1 - t;
+                translate = -t * 14;
+            }
+            pageTitle.style.opacity = opacity;
+            pageTitle.style.transform = `translateY(${translate}px)`;
+        }
+
+        function onScroll() {
+            if (window.scrollY > NAV_TRIGGER) {
+                topNav.classList.add('scrolled');
+            } else {
+                topNav.classList.remove('scrolled');
+            }
+            updateHeadingFade();
+        }
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        updateHeadingFade();
+
+        const form = document.getElementById('churnForm');
+        const resultsSection = document.getElementById('resultsSection');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Get form values
+            const age = parseInt(document.getElementById('age').value);
+            const tenure = parseInt(document.getElementById('tenure').value);
+            const monthlyCharges = parseFloat(document.getElementById('monthlyCharges').value);
+            const supportCalls = parseInt(document.getElementById('supportCalls').value);
+            const complaints = parseInt(document.getElementById('complaints').value);
+            const usage = parseInt(document.getElementById('usage').value);
+
+            // Calculate risk score using the C program logic
+            let riskScore = 0;
+
+            if (tenure < 12) riskScore += 20;
+            if (monthlyCharges > 1000) riskScore += 20;
+            if (supportCalls >= 5) riskScore += 20;
+            if (complaints >= 3) riskScore += 25;
+            if (usage < 10) riskScore += 15;
+
+            // Cap the score at 100
+            riskScore = Math.min(riskScore, 100);
+
+            // Determine classification and recommendations
+            let classification, riskLevel, recommendations, styleClass;
+
+            if (riskScore >= 70) {
+                classification = "LIKELY TO CHURN";
+                riskLevel = "HIGH RISK";
+                styleClass = "risk-high";
+                recommendations = [
+                    "Contact the customer immediately.",
+                    "Offer a suitable plan or discount.",
+                    "Resolve complaints and service issues.",
+                    "Assign a dedicated account manager.",
+                    "Provide personalized retention offer."
+                ];
+            } else if (riskScore >= 40) {
+                classification = "MAY CHURN";
+                riskLevel = "MEDIUM RISK";
+                styleClass = "risk-medium";
+                recommendations = [
+                    "Contact the customer proactively.",
+                    "Check customer satisfaction levels.",
+                    "Provide suitable offers.",
+                    "Improve service quality.",
+                    "Increase engagement through valuable features."
+                ];
+            } else {
+                classification = "LIKELY TO STAY";
+                riskLevel = "LOW RISK";
+                styleClass = "risk-low";
+                recommendations = [
+                    "Continue normal customer service.",
+                    "Provide loyalty benefits when appropriate.",
+                    "Monitor for any changes in behavior.",
+                    "Maintain service quality standards.",
+                    "Offer exclusive member perks."
+                ];
+            }
+
+            // Update results display
+            document.getElementById('riskScore').textContent = riskScore;
+            
+            const classificationEl = document.getElementById('classification');
+            classificationEl.textContent = classification;
+            classificationEl.className = 'classification-value ' + styleClass;
+            
+            const riskLevelEl = document.getElementById('riskLevel');
+            riskLevelEl.textContent = riskLevel;
+            riskLevelEl.className = 'classification-value ' + styleClass;
+
+            document.getElementById('displayTenure').textContent = tenure + ' mo';
+            document.getElementById('displayCharges').textContent = '$' + monthlyCharges.toFixed(2);
+            document.getElementById('displaySupport').textContent = supportCalls;
+            document.getElementById('displayComplaints').textContent = complaints;
+
+            // Update recommendations
+            const recommendationsList = document.getElementById('recommendationsList');
+            recommendationsList.innerHTML = '';
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.textContent = rec;
+                recommendationsList.appendChild(li);
+            });
+
+            // Show results section
+            resultsSection.classList.add('active');
+            
+            // Scroll to results on mobile
+            if (window.innerWidth < 968) {
+                setTimeout(() => {
+                    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+        });
+
+        function resetForm() {
+            form.reset();
+            resultsSection.classList.remove('active');
+            document.querySelector('.content-wrapper').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Add enter key support for input fields
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    form.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+    </script>
+</body>
+</html>
